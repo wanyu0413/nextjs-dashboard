@@ -1,56 +1,81 @@
 import bcrypt from 'bcrypt';
-import { prisma } from '../lib/prisma';
+import sql from '../lib/data';
 import { invoices, customers, revenue, users } from '../lib/placeholder-data';
 
 async function seedUsers() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS users (
+      id UUID PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      email TEXT NOT NULL UNIQUE,
+      password TEXT NOT NULL
+    )
+  `;
+
   return Promise.all(
     users.map(async (user) => {
       const hashedPassword = await bcrypt.hash(user.password, 10);
-      return prisma.user.upsert({
-        where: { id: user.id },
-        update: {},
-        create: { id: user.id, name: user.name, email: user.email, password: hashedPassword },
-      });
+      return sql`
+        INSERT INTO users (id, name, email, password)
+        VALUES (${user.id}, ${user.name}, ${user.email}, ${hashedPassword})
+        ON CONFLICT (id) DO NOTHING
+      `;
     }),
   );
 }
 
 async function seedCustomers() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS customers (
+      id UUID PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      email VARCHAR(255) NOT NULL,
+      image_url VARCHAR(255) NOT NULL
+    )
+  `;
+
   return Promise.all(
-    customers.map((customer) =>
-      prisma.customer.upsert({
-        where: { id: customer.id },
-        update: {},
-        create: customer,
-      }),
-    ),
+    customers.map((customer) => sql`
+      INSERT INTO customers (id, name, email, image_url)
+      VALUES (${customer.id}, ${customer.name}, ${customer.email}, ${customer.image_url})
+      ON CONFLICT (id) DO NOTHING
+    `),
   );
 }
 
 async function seedInvoices() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS invoices (
+      id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+      customer_id UUID NOT NULL,
+      amount INT NOT NULL,
+      status VARCHAR(255) NOT NULL,
+      date DATE NOT NULL
+    )
+  `;
+
   return Promise.all(
-    invoices.map((invoice) =>
-      prisma.invoice.create({
-        data: {
-          customer_id: invoice.customer_id,
-          amount: invoice.amount,
-          status: invoice.status,
-          date: new Date(invoice.date),
-        },
-      }),
-    ),
+    invoices.map((invoice) => sql`
+      INSERT INTO invoices (customer_id, amount, status, date)
+      VALUES (${invoice.customer_id}, ${invoice.amount}, ${invoice.status}, ${invoice.date})
+    `),
   );
 }
 
 async function seedRevenue() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS revenue (
+      month VARCHAR(4) PRIMARY KEY,
+      revenue INT NOT NULL
+    )
+  `;
+
   return Promise.all(
-    revenue.map((rev) =>
-      prisma.revenue.upsert({
-        where: { month: rev.month },
-        update: {},
-        create: rev,
-      }),
-    ),
+    revenue.map((rev) => sql`
+      INSERT INTO revenue (month, revenue)
+      VALUES (${rev.month}, ${rev.revenue})
+      ON CONFLICT (month) DO NOTHING
+    `),
   );
 }
 
