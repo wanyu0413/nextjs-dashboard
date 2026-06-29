@@ -17,12 +17,10 @@ export async function fetchRevenue() {
   try {
     // We artificially delay a response for demo purposes.
     // Don't do this in production :)
-    // console.log('Fetching revenue data...');
-    // await new Promise((resolve) => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    console.log('Fetching revenue data completed after 3 seconds.');
 
     const data = await sql<Revenue[]>`SELECT * FROM revenue`;
-
-    // console.log('Data fetch completed after 3 seconds.');
 
     return data;
   } catch (error) {
@@ -33,6 +31,12 @@ export async function fetchRevenue() {
 
 export async function fetchLatestInvoices() {
   try {
+
+    // We artificially delay a response for demo purposes.
+    // Don't do this in production :)
+    await new Promise((resolve) => setTimeout(resolve, 6000));
+    console.log('Fetching latest invoices completed after 6 seconds.');
+
     const data = await sql`
       SELECT invoices.id, invoices.amount, customers.name, customers.image_url, customers.email
       FROM invoices
