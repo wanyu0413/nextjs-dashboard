@@ -60,6 +60,11 @@ export async function fetchLatestInvoices() {
 
 export async function fetchCardData() {
   try {
+    // We artificially delay a response for demo purposes.
+    // Don't do this in production :)
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    console.log('Fetching card data completed after 2 seconds.');
+
     const [invoiceCount, customerCount, paidResult, pendingResult] = await Promise.all([
       sql`SELECT COUNT(*) FROM invoices`,
       sql`SELECT COUNT(*) FROM customers`,
